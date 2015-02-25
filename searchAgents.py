@@ -324,15 +324,14 @@ class CornersProblem(search.SearchProblem):
             dx, dy = Actions.directionToVector(action)
             nextx, nexty = int(x + dx), int(y + dy)
             if not self.walls[nextx][nexty]:
-                top, right = self.walls.height-2, self.walls.width-2
                 nextState = ((nextx, nexty), state[1], state[2], state[3], state[4])
-                if (nextx, nexty) == (1, 1):
+                if (nextx, nexty) == self.corners[0]:
                     nextState = ((nextx, nexty), 1, state[2], state[3], state[4])
-                if (nextx, nexty) == (1, top):
+                if (nextx, nexty) == self.corners[1]:
                     nextState = ((nextx, nexty), state[1], 1, state[3], state[4])
-                if (nextx, nexty) == (right, 1):
+                if (nextx, nexty) == self.corners[2]:
                     nextState = ((nextx, nexty), state[1], state[2], 1, state[4])
-                if (nextx, nexty) == (right, top):
+                if (nextx, nexty) == self.corners[3]:
                     nextState = ((nextx, nexty), state[1], state[2], state[3], 1)
                 cost = 1
                 successors.append((nextState, action, cost))
@@ -370,8 +369,16 @@ def cornersHeuristic(state, problem):
     corners = problem.corners # These are the corner coordinates
     walls = problem.walls # These are the walls of the maze, as a Grid (game.py)
 
-    "*** YOUR CODE HERE ***"
-    return 0 # Default to trivial solution
+    if problem.isGoalState(state):
+        return 0 # Default to trivial solution
+
+    hope = 0
+    x, y = state[0]
+
+    for i in range(1,5):
+        if not state[i]:
+            hope += 1
+    return hope
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
