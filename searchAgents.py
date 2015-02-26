@@ -372,13 +372,41 @@ def cornersHeuristic(state, problem):
     if problem.isGoalState(state):
         return 0 # Default to trivial solution
 
-    hope = 0
-    x, y = state[0]
+    hope = 1000000
+    targetCorners = [state[0]]
 
     for i in range(1,5):
         if not state[i]:
-            hope += 1
+            corner = corners[i-1]
+            targetCorners.append(corner)
+
+    jobStack = util.Stack()
+    jobStack.push([targetCorners[0]])
+
+    count = len(targetCorners)
+
+    while not jobStack.isEmpty():
+        currentState = jobStack.pop()
+        
+        if count == len(currentState):
+            temp = countCost(currentState)
+            hope = min(hope, temp)
+
+        for i in range(count):
+            if targetCorners[i] not in currentState:
+                temp = list(currentState)
+                temp.append(targetCorners[i])
+                jobStack.push(temp)
+
     return hope
+
+def countCost(states):
+    cost = 0
+    length = len(states)
+    for i in range(length-1):
+        cost += abs(states[i][0]-states[i+1][0]) + abs(states[i][1]-states[i+1][1])
+
+    return cost
 
 class AStarCornersAgent(SearchAgent):
     "A SearchAgent for FoodSearchProblem using A* and your foodHeuristic"
@@ -471,11 +499,9 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
-    "*** YOUR CODE HERE ***"
-    #hope = 0
 
-    #for x, y in foodGrid.asList():
-        #hope += abs(x-position[0])+abs(y-position[1])
+    if problem.isGoalState(state):
+        return 0 # Default to trivial solution
 
     return foodGrid.count()
 

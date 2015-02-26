@@ -94,8 +94,6 @@ def dfsF(currentState, states, actions, problem):
 
     return None
 
-
-
 def depthFirstSearch(problem):
     """
     Search the deepest nodes in the search tree first.
@@ -111,12 +109,25 @@ def depthFirstSearch(problem):
     print "Start's successors:", problem.getSuccessors(problem.getStartState())
     """
     "*** YOUR CODE HERE ***"
+    jobStack = util.Stack()
+    
+    jobStack.push((problem.getStartState(), [], [problem.getStartState]))
 
-    actions = []
-    states = []
+    while not jobStack.isEmpty():
+        currentState, actions, visited = jobStack.pop()
 
-    return dfsF(problem.getStartState(), states, actions, problem)
+        if problem.isGoalState(currentState):
+            return actions
 
+        successors = problem.getSuccessors(currentState)
+
+        for nextState, action, cost in successors:
+            if nextState not in visited:
+                temp1 = list(actions)
+                temp1.append(action)
+                temp2 = list(visited)
+                temp2.append(nextState)
+                jobStack.push((nextState, temp1, temp2))
 
 def breadthFirstSearch(problem):
     """Search the shallowest nodes in the search tree first."""
@@ -152,13 +163,16 @@ def uniformCostSearch(problem):
     "*** YOUR CODE HERE ***"
 
     jobQueue = util.PriorityQueue()
-    states = []
-    
-    jobQueue.push((problem.getStartState(),[]), 0)
-    states.append(problem.getStartState())
+    jobQueue.push((problem.getStartState(), [], 0), 0)
+    closed = set()
 
     while not jobQueue.isEmpty():
-        currentState, actions = jobQueue.pop()
+        currentState, actions, currentCost = jobQueue.pop()
+
+        if currentState in closed:
+            continue
+        else:
+            closed.add(currentState)
 
         if problem.isGoalState(currentState):
             return actions
@@ -166,11 +180,10 @@ def uniformCostSearch(problem):
         successors = problem.getSuccessors(currentState)
 
         for nextState, action, cost in successors:
-            if nextState not in states:
-                temp = list(actions)
-                temp.append(action)
-                jobQueue.push((nextState, temp), cost)
-                states.append(nextState)
+            if nextState not in closed:
+                temp1 = list(actions)
+                temp1.append(action)
+                jobQueue.push((nextState, temp1, currentCost+cost), currentCost+cost)
 
 def nullHeuristic(state, problem=None):
     """
@@ -183,13 +196,17 @@ def aStarSearch(problem, heuristic=nullHeuristic):
     """Search the node that has the lowest combined cost and heuristic first."""
     "*** YOUR CODE HERE ***"
     jobQueue = util.PriorityQueue()
-    states = []
     
-    jobQueue.push((problem.getStartState(),[]), 0)
-    states.append(problem.getStartState())
+    jobQueue.push((problem.getStartState(), [], 0), 0)
+    closed = set()
 
     while not jobQueue.isEmpty():
-        currentState, actions = jobQueue.pop()
+        currentState, actions, currentCost = jobQueue.pop()
+
+        if currentState in closed:
+            continue
+        else:
+            closed.add(currentState)
 
         if problem.isGoalState(currentState):
             return actions
@@ -197,12 +214,11 @@ def aStarSearch(problem, heuristic=nullHeuristic):
         successors = problem.getSuccessors(currentState)
 
         for nextState, action, cost in successors:
-            if nextState not in states:
+            if nextState not in closed:
                 temp = list(actions)
                 temp.append(action)
                 hope = heuristic(nextState, problem)
-                jobQueue.push((nextState, temp), cost+hope)
-                states.append(nextState)
+                jobQueue.push((nextState, temp, currentCost+cost), currentCost+cost+hope)
 
 # Abbreviations
 bfs = breadthFirstSearch
