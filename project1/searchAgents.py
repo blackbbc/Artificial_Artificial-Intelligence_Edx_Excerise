@@ -499,11 +499,73 @@ def foodHeuristic(state, problem):
     problem.heuristicInfo['wallCount']
     """
     position, foodGrid = state
+    foodList = foodGrid.asList()
 
     if problem.isGoalState(state):
         return 0 # Default to trivial solution
 
-    return foodGrid.count()
+    if not problem.heuristicInfo.has_key('pointID'):
+        pointID = [[0 for col in range(1000)] for row in range(1000)]
+        distance = [[0 for col in range(1000)] for row in range(1000)]
+
+        index = 0
+        for point in foodList:
+            pointID[point[0]][point[1]] = index
+            index += 1
+
+        for point1 in foodList:
+            p1 = findID(point1, pointID)
+            for point2 in foodList:
+                p2 = findID(point2, pointID)
+                distance[p1][p2] = mazeDistance(point1, point2, problem.startingGameState)
+                distance[p2][p1] = distance[p1][p2]
+
+        problem.heuristicInfo['pointID'] = pointID
+        problem.heuristicInfo['distance'] = distance
+
+    pointID = problem.heuristicInfo['pointID']
+    distance = problem.heuristicInfo['distance']
+
+    hope = 0
+    cache = 0
+
+    if foodGrid.count() == 1:
+        return manhattanDistance(position, foodList[0])
+
+    if foodGrid.count() == 2:
+        p1 = findID(foodList[0], pointID)
+        p2 = findID(foodList[1], pointID)
+        temp1 = distance[p1][p2]
+        temp2 = min(manhattanDistance(position, foodList[0]), manhattanDistance(position, foodList[1]))
+        hope = temp1 + temp2
+        return hope
+
+    """
+    greatest triangle
+    shortest path
+    """
+    for food1 in foodList:
+        p1 = findID(food1, pointID)
+        for food2 in foodList:
+            p2 = findID(food2, pointID)
+            for food3 in foodList:
+                p3 = findID(food3, pointID)
+
+                temp = distance[p1][p2] + distance[p1][p3] + distance[p2][p3]
+
+                if temp > cache:
+                    cache = temp
+                    d1 = manhattanDistance(position, food1) + distance[p1][p2] + distance[p2][p3]
+                    d2 = manhattanDistance(position, food1) + distance[p1][p3] + distance[p3][p2]
+                    d3 = manhattanDistance(position, food2) + distance[p2][p1] + distance[p1][p3]
+                    d4 = manhattanDistance(position, food2) + distance[p2][p3] + distance[p3][p1]
+                    d5 = manhattanDistance(position, food3) + distance[p3][p1] + distance[p1][p2]
+                    d6 = manhattanDistance(position, food3) + distance[p3][p2] + distance[p2][p1]
+
+                    hope = min(d1, d2, d3, d4, d5, d6)
+
+    return hope
+
 
 class ClosestDotSearchAgent(SearchAgent):
     "Search for all food using a sequence of searches"
@@ -614,3 +676,9 @@ def mazeDistance(point1, point2, gameState):
     assert not walls[x2][y2], 'point2 is a wall: ' + str(point2)
     prob = PositionSearchProblem(gameState, start=point1, goal=point2, warn=False, visualize=False)
     return len(search.bfs(prob))
+
+def manhattanDistance(point1, point2):
+    return abs(point1[0]-point2[0])+abs(point1[1]-point2[1])
+
+def findID(point, pointID):
+    return pointID[point[0]][point[1]]
