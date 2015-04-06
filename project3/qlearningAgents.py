@@ -82,8 +82,8 @@ class QLearningAgent(ReinforcementAgent):
         if len(actions) == 0:
             return bestAction
         for action in actions:
-            if self.Q[(state, action)] > bestValue:
-                bestValue = self.Q[(state, action)]
+            if self.getQValue(state, action) > bestValue:
+                bestValue = self.getQValue(state, action)
                 bestAction = action
 
         return bestAction
